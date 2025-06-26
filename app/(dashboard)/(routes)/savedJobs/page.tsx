@@ -19,7 +19,9 @@ interface SearchProps{
     }
 }
 
-const SavedJobsPage = async({searchParams} : SearchProps) => {
+import React from "react";
+
+const SavedJobsPage: ({ searchParams }: SearchProps) => Promise<React.ReactElement> = async({searchParams}) => {
 
   const {userId} = await auth();
 
