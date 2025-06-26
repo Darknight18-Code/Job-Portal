@@ -10,24 +10,24 @@ import PageContent from "../search/_components/page-content";
 
 interface SearchProps{
     searchParams:{
-        title : string;
-        categoryId : string;
-        createdAtFilter : string;
-        shiftTiming : string;
-        workMode : string;
-        yearsOfExperience : string;
+        title?: string;
+        categoryId?: string;
+        createdAtFilter?: string;
+        shiftTiming?: string;
+        workMode?: string;
+        yearsOfExperience?: string;
     }
 }
 
 const SavedJobsPage = async({searchParams} : SearchProps) => {
 
-    const {userId} = await auth();
+  const {userId} = await auth();
 
-    if(!userId){
-        redirect("/")
-    }
+  if(!userId){
+      redirect("/")
+  }
 
-    const jobs = await getJobs({...searchParams, savedJobs : true })
+  const jobs = await getJobs({...searchParams, savedJobs : true })
 
 
   return (
