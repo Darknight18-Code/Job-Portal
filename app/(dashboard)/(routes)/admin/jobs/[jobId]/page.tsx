@@ -21,13 +21,15 @@ import AttachmentsForm from "./_components/attachments-form";
 
 const JobDetailsPage = async (
     {params}: {
-        params: { jobId: string }
+        params: Promise<{ jobId: string }>
     }
 ) => {
 
+  const {jobId} = await params;
+
     const validObjectIdRegex = /^[0-9a-fA-F]{24}$/;
 
-    if (!validObjectIdRegex.test(params.jobId)) {
+    if (!validObjectIdRegex.test(jobId)) {
         return redirect("/admin/jobs");
     }
 
@@ -39,7 +41,7 @@ const JobDetailsPage = async (
 
     const job  = await db.job.findUnique({
         where: {
-            id: params.jobId,
+            id: jobId,
             userId
         },
         include: {
@@ -90,7 +92,7 @@ const JobDetailsPage = async (
 
         {/* action button */}
         <JobPublishAction
-            jobId={params.jobId}
+            jobId={jobId}
             disabled={!isComplete}
             isPublished={job.isPublished}
         />
