@@ -1,5 +1,3 @@
-// app/(dashboard)/(routes)/admin/companies/[companyId]/page.tsx
-
 import Banner from "@/components/ui/banner";
 import IconBadge from "@/components/ui/icon-badge";
 import { db } from "@/lib/db";
@@ -15,11 +13,13 @@ import CoverImageForm from "./cover-image-form";
 import CompanyOverviewForm from "./company-overview";
 import WhyJoinUsForm from "./why-join-us";
 
-export default async function CompanyEditPage({
-  params,
-}: {
-  params: { companyId: string };
-}) {
+interface CompanyEditPageProps {
+  params: {
+    companyId: string;
+  };
+}
+
+const CompanyEditPage = async ({ params }: CompanyEditPageProps) => {
   const validObjectIdRegex = /^[0-9a-fA-F]{24}$/;
 
   if (!validObjectIdRegex.test(params.companyId)) {
@@ -27,6 +27,7 @@ export default async function CompanyEditPage({
   }
 
   const { userId } = await auth();
+
   if (!userId) {
     return redirect("/");
   }
@@ -38,13 +39,13 @@ export default async function CompanyEditPage({
     },
   });
 
-  if (!company) {
-    return redirect("/admin/companies");
-  }
-
   const categories = await db.category.findMany({
     orderBy: { name: "asc" },
   });
+
+  if (!company) {
+    return redirect("/admin/companies");
+  }
 
   const requiredFields = [
     company.name,
@@ -67,7 +68,7 @@ export default async function CompanyEditPage({
 
   return (
     <div className="p-6">
-      <Link href="/admin/companies">
+      <Link href={"/admin/companies"}>
         <div className="flex items-center gap-2 text-sm text-neutral-500">
           <ArrowLeft className="w-4 h-4" />
           Back
@@ -114,4 +115,6 @@ export default async function CompanyEditPage({
       </div>
     </div>
   );
-}
+};
+
+export default CompanyEditPage;
