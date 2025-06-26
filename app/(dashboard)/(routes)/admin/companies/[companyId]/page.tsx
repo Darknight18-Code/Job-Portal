@@ -13,15 +13,12 @@ import CoverImageForm from "./cover-image-form";
 import CompanyOverviewForm from "./company-overview";
 import WhyJoinUsForm from "./why-join-us";
 
-// ✅ Define params interface for clarity
-interface CompanyEditPageProps {
-  params: {
-    companyId: string;
-  };
-}
-
-// ✅ Use plain async function, NOT FC or arrow function
-export default async function CompanyEditPage({ params }: CompanyEditPageProps) {
+// ✅ Correctly typed props for dynamic route in App Router
+export default async function CompanyEditPage({
+  params,
+}: {
+  params: { companyId: string };
+}) {
   const validObjectIdRegex = /^[0-9a-fA-F]{24}$/;
 
   if (!validObjectIdRegex.test(params.companyId)) {
@@ -66,7 +63,6 @@ export default async function CompanyEditPage({ params }: CompanyEditPageProps) 
   const totalFields = requiredFields.length;
   const completedFields = requiredFields.filter(Boolean).length;
   const completionText = `(${completedFields} / ${totalFields})`;
-  const isComplete = requiredFields.every(Boolean);
 
   return (
     <div className="p-6">
