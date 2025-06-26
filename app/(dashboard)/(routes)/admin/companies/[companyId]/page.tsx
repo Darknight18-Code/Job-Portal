@@ -1,5 +1,3 @@
-// app/(dashboard)/(routes)/admin/companies/[companyId]/page.tsx
-
 import Banner from "@/components/ui/banner";
 import IconBadge from "@/components/ui/icon-badge";
 import { db } from "@/lib/db";
@@ -18,11 +16,14 @@ import WhyJoinUsForm from "./why-join-us";
 export default async function CompanyEditPage({
   params,
 }: {
-  params: { companyId: string };
+  params: Promise<{ companyId: string }>;
 }) {
+  // Await the params in Next.js 15
+  const { companyId } = await params;
+  
   const validObjectIdRegex = /^[0-9a-fA-F]{24}$/;
 
-  if (!validObjectIdRegex.test(params.companyId)) {
+  if (!validObjectIdRegex.test(companyId)) {
     return redirect("/admin/companies");
   }
 
@@ -33,7 +34,7 @@ export default async function CompanyEditPage({
 
   const company = await db.company.findUnique({
     where: {
-      id: params.companyId,
+      id: companyId,
       userId,
     },
   });
