@@ -2,11 +2,10 @@ import { getJobs } from "@/actions/get-jobs";
 import Box from "@/components/ui/box";
 import CustomBreadCrumb from "@/components/ui/custom-bread-crumb";
 import SearchContainer from "@/components/ui/search-container";
-import { db } from "@/lib/db";
+import { db } from "@/lib/db"; // db is not used here, you can remove this import if not needed elsewhere in this file
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import PageContent from "../search/_components/page-content";
-import { JSX } from "react";
 
 
 interface SearchProps{
@@ -26,33 +25,33 @@ const SavedJobsPage = async({searchParams} : SearchProps) => {
     // Await searchParams here
     const awaitedSearchParams = await searchParams;
 
+    const {userId} = await auth();
 
-  const {userId} = await auth();
+    if(!userId){
+        redirect("/")
+    }
 
-  if(!userId){
-      redirect("/")
-  }
-
-  const jobs = await getJobs({...searchParams, savedJobs : true })
+    // Use the awaitedSearchParams
+    const jobs = await getJobs({...awaitedSearchParams, savedJobs : true })
 
 
-  return (
-    <div className="flex-col">
-      <Box className="mt-4 items-center justify-start gap-2 mb-4 px-2">
-        <CustomBreadCrumb breadCrumbItem={[]} breadCrumbPage="Saved Jobs"/>
-      </Box>
-      <Box className="w-full h-44 bg-purple-600/20 justify-center">
-        <h2 className="font-sans uppercase text-3xl tracking-wider font-bold">Saved Jobs</h2>
-      </Box>
+    return (
+        <div className="flex-col">
+            <Box className="mt-4 items-center justify-start gap-2 mb-4 px-2">
+                <CustomBreadCrumb breadCrumbItem={[]} breadCrumbPage="Saved Jobs"/>
+            </Box>
+            <Box className="w-full h-44 bg-purple-600/20 justify-center">
+                <h2 className="font-sans uppercase text-3xl tracking-wider font-bold">Saved Jobs</h2>
+            </Box>
 
-      <div className="px-6 pt-6 md:mb-0">
-        <SearchContainer/>
-      </div>
-      <div className="p-4">
-        <PageContent jobs={jobs} userId={userId}/>
-      </div>
-    </div>
-  )
+            <div className="px-6 pt-6 md:mb-0">
+                <SearchContainer/>
+            </div>
+            <div className="p-4">
+                <PageContent jobs={jobs} userId={userId}/>
+            </div>
+        </div>
+    )
 }
 
 export default SavedJobsPage
