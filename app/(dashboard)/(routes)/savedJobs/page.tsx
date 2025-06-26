@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import PageContent from "../search/_components/page-content";
+import { JSX } from "react";
 
 
 interface SearchProps{
@@ -19,9 +20,7 @@ interface SearchProps{
     }
 }
 
-import React from "react";
-
-const SavedJobsPage: ({ searchParams }: SearchProps) => Promise<React.ReactElement> = async({searchParams}) => {
+const SavedJobsPage: ({ searchParams }: SearchProps) => Promise<JSX.Element> = async({searchParams}) => {
 
   const {userId} = await auth();
 
