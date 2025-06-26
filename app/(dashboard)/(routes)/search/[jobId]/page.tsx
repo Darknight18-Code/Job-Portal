@@ -9,13 +9,15 @@ import Box from "@/components/ui/box";
 import PageContent from "../_components/page-content";
 
 
-const JobDetailsPage = async({params} : {params : {jobId : string}}) => {
+const JobDetailsPage = async({params} : {params : Promise<{jobId : string}>}) => {
+
+  const {jobId} = await params
 
     const {userId} = await auth();
 
     const job = await db.job.findUnique({
         where : {
-            id : params.jobId,
+            id : jobId,
         },
         include : {
             company : true,
