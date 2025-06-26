@@ -10,17 +10,22 @@ import { JSX } from "react";
 
 
 interface SearchProps{
-    searchParams:{
+    // Change searchParams to be a Promise of the object
+    searchParams: Promise<{
         title?: string;
         categoryId?: string;
         createdAtFilter?: string;
         shiftTiming?: string;
         workMode?: string;
         yearsOfExperience?: string;
-    }
+    }>
 }
 
-const SavedJobsPage: ({ searchParams }: SearchProps) => Promise<JSX.Element> = async({searchParams}) => {
+const SavedJobsPage = async({searchParams} : SearchProps) => {
+
+    // Await searchParams here
+    const awaitedSearchParams = await searchParams;
+
 
   const {userId} = await auth();
 
