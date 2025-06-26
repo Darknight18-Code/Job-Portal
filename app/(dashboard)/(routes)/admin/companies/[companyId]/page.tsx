@@ -1,3 +1,6 @@
+// app/(dashboard)/(routes)/admin/companies/[companyId]/page.tsx
+
+import { Metadata } from "next";
 import Banner from "@/components/ui/banner";
 import IconBadge from "@/components/ui/icon-badge";
 import { db } from "@/lib/db";
@@ -13,74 +16,52 @@ import CoverImageForm from "./cover-image-form";
 import CompanyOverviewForm from "./company-overview";
 import WhyJoinUsForm from "./why-join-us";
 
-interface CompanyEditPageProps {
-  params: {
-    companyId: string;
-  };
+interface PageProps {
+  params: { companyId: string };
 }
 
-const CompanyEditPage = async ({ params }: CompanyEditPageProps) => {
-  const validObjectIdRegex = /^[0-9a-fA-F]{24}$/;
+export const metadata: Metadata = {
+  title: "Edit Company",
+};
 
-  if (!validObjectIdRegex.test(params.companyId)) {
-    return redirect("/admin/companies");
-  }
+export default async function CompanyEditPage({ params }: PageProps) {
+  const { companyId } = params;
 
+  // Validate `companyId`
+  const validId = /^[0-9a-fA-F]{24}$/.test(companyId);
+  if (!validId) redirect("/admin/companies");
+
+  // Ensure authenticated
   const { userId } = await auth();
+  if (!userId) redirect("/");
 
-  if (!userId) {
-    return redirect("/");
-  }
-
+  // Fetch company
   const company = await db.company.findUnique({
-    where: {
-      id: params.companyId,
-      userId,
-    },
+    where: { id: companyId, userId },
   });
+  if (!company) redirect("/admin/companies");
 
-  const categories = await db.category.findMany({
-    orderBy: { name: "asc" },
-  });
-
-  if (!company) {
-    return redirect("/admin/companies");
-  }
-
-  const requiredFields = [
-    company.name,
-    company.description,
-    company.logo,
-    company.coverImage,
-    company.mail,
-    company.website,
-    company.linkedIn,
-    company.address_line_1,
-    company.city,
-    company.state,
-    company.overview,
-    company.whyJoinUs,
+  // Count completed fields
+  const required = [
+    company.name, company.description, company.logo, company.coverImage,
+    company.mail, company.website, company.linkedIn,
+    company.address_line_1, company.city, company.state,
+    company.overview, company.whyJoinUs,
   ];
-
-  const totalFields = requiredFields.length;
-  const completedFields = requiredFields.filter(Boolean).length;
-  const completionText = `(${completedFields} / ${totalFields})`;
+  const completed = required.filter(Boolean).length;
+  const completionText = `(${completed} / ${required.length})`;
 
   return (
     <div className="p-6">
-      <Link href={"/admin/companies"}>
-        <div className="flex items-center gap-2 text-sm text-neutral-500">
-          <ArrowLeft className="w-4 h-4" />
-          Back
-        </div>
+      <Link href="/admin/companies" className="flex items-center gap-2 text-sm text-neutral-500">
+        <ArrowLeft className="w-4 h-4" />
+        Back
       </Link>
 
       <div className="flex items-center justify-between my-4">
         <div className="flex flex-col gap-y-2">
           <h1 className="text-2xl font-medium">Company Setup</h1>
-          <span className="text-sm text-neutral-500">
-            Complete All fields {completionText}
-          </span>
+          <span className="text-sm text-neutral-500">Complete All fields {completionText}</span>
         </div>
       </div>
 
@@ -90,7 +71,6 @@ const CompanyEditPage = async ({ params }: CompanyEditPageProps) => {
             <IconBadge icon={LayoutDashboard} />
             <h2 className="text-xl text-neutral-700">Customize your Company</h2>
           </div>
-
           <CompanyName initialData={company} companyId={company.id} />
           <CompanyDescriptionForm initialData={company} companyId={company.id} />
           <LogoForm initialData={company} companyId={company.id} />
@@ -102,7 +82,6 @@ const CompanyEditPage = async ({ params }: CompanyEditPageProps) => {
               <IconBadge icon={Network} />
               <h2 className="text-xl">Company Social Contacts</h2>
             </div>
-
             <CompanySocialContactsForm initialData={company} companyId={company.id} />
             <CoverImageForm initialData={company} companyId={company.id} />
           </div>
@@ -115,6 +94,4 @@ const CompanyEditPage = async ({ params }: CompanyEditPageProps) => {
       </div>
     </div>
   );
-};
-
-export default CompanyEditPage;
+}
