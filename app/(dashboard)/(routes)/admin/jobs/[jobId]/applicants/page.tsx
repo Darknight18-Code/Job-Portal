@@ -8,13 +8,15 @@ import CustomBreadCrumb from "@/components/ui/custom-bread-crumb";
 import { DataTable } from "@/components/ui/data-table";
 
 
-const JobApplicantPage = async ({params} : {params : {jobId :string}}) => {
+const JobApplicantPage = async ({params} : {params : Promise<{jobId :string}>}) => {
+
+    const {jobId} = await params;
 
     const {userId} =await auth();
 
     const job = await db.job.findUnique({
         where : {
-            id : params.jobId,
+            id : jobId,
             userId : userId as string,
         }
     });
@@ -47,7 +49,7 @@ const JobApplicantPage = async ({params} : {params : {jobId :string}}) => {
     }); 
 
     const filteredProfiles = profile && profile.filter(profile => profile.appliedJobs.some(
-        appliedJob => appliedJob.jobId === params.jobId
+        appliedJob => appliedJob.jobId === jobId
     ));
 
     const formattedProfiles : ApplicantColumns[] = filteredProfiles.map(profile => ({
@@ -55,7 +57,7 @@ const JobApplicantPage = async ({params} : {params : {jobId :string}}) => {
         fullName : profile.fullName ? profile.fullName : "",
         email : profile.email ? profile.email : "",
         contact : profile.contact ? profile.contact : "",
-        appliedAt : profile.appliedJobs.find(job => job.jobId === params.jobId)?.appliedAt ? format(new Date(profile.appliedJobs.find(job => job.jobId === params.jobId)?.appliedAt ?? ""),"MMMM do yyyy") : "",
+        appliedAt : profile.appliedJobs.find(job => job.jobId === jobId)?.appliedAt ? format(new Date(profile.appliedJobs.find(job => job.jobId === jobId)?.appliedAt ?? ""),"MMMM do yyyy") : "",
         resume : profile.resumes.find(res => res.id === profile.activeresumeId)?.url ?? "",
         resumeName : profile.resumes.find(res => res.id === profile.activeresumeId)?.name ?? ""
     }))
