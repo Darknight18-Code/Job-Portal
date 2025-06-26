@@ -1,3 +1,5 @@
+// app/(dashboard)/(routes)/admin/companies/[companyId]/page.tsx
+
 import Banner from "@/components/ui/banner";
 import IconBadge from "@/components/ui/icon-badge";
 import { db } from "@/lib/db";
@@ -13,7 +15,6 @@ import CoverImageForm from "./cover-image-form";
 import CompanyOverviewForm from "./company-overview";
 import WhyJoinUsForm from "./why-join-us";
 
-// ✅ Correctly typed props for dynamic route in App Router
 export default async function CompanyEditPage({
   params,
 }: {
@@ -37,13 +38,13 @@ export default async function CompanyEditPage({
     },
   });
 
-  const categories = await db.category.findMany({
-    orderBy: { name: "asc" },
-  });
-
   if (!company) {
     return redirect("/admin/companies");
   }
+
+  const categories = await db.category.findMany({
+    orderBy: { name: "asc" },
+  });
 
   const requiredFields = [
     company.name,
