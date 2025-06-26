@@ -8,13 +8,15 @@ import Image from "next/image";
 import CompanyDetailContentPage from "./_components/company-detail-content";
 
 
-const CompanyDetailPage = async ({params} : {params : {companyId : string}}) => {
+const CompanyDetailPage = async ({params} : {params : Promise<{companyId : string}>}) => {
+
+  const {companyId} = await params;
 
     const {userId}  = await auth();
 
     const company = await db.company.findUnique({
         where : {
-            id : params.companyId
+            id : companyId
         }
     })
 
@@ -24,7 +26,7 @@ const CompanyDetailPage = async ({params} : {params : {companyId : string}}) => 
 
     const jobs = await db.job.findMany({
       where : {
-        companyId : params.companyId
+        companyId : companyId
       },
       include :{
         company : true
