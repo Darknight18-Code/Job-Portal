@@ -12,9 +12,17 @@ import CompanySocialContactsForm from "./social-contacts-form";
 import CoverImageForm from "./cover-image-form";
 import CompanyOverviewForm from "./company-overview";
 import WhyJoinUsForm from "./why-join-us";
+import { type Metadata } from "next"; // optional
+import { type FC } from "react";
+
+interface CompanyEditPageProps {
+  params: {
+    companyId: string;
+  };
+}
 
 
-const CompanyEditPage = async ({params}: { params: { companyId: string }}) => {
+const CompanyEditPage: FC<CompanyEditPageProps> = async ({ params }) => {
 
      const validObjectIdRegex = /^[0-9a-fA-F]{24}$/;
     
