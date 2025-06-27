@@ -5,53 +5,54 @@ import { auth } from "@clerk/nextjs/server";
 import CategoriesList from "./_components/categories-list";
 import PageContent from "./_components/page-content";
 import AppliedFilters from "./_components/applied-filters";
+import { Suspense } from "react"; // Import Suspense
 
-interface SearchProps{
-    // Change searchParams to be a Promise of the object
-    searchParams: Promise<{
-        title?: string;
-        categoryId?: string;
-        createdAtFilter?: string;
-        shiftTiming?: string;
-        workMode?: string;
-        yearsOfExperience?: string;
-    }>
+interface SearchProps {
+  searchParams: { // No need for Promise here, Next.js passes it directly
+    title?: string;
+    categoryId?: string;
+    createdAtFilter?: string;
+    shiftTiming?: string;
+    workMode?: string;
+    yearsOfExperience?: string;
+  };
 }
 
-const SearchPage = async ({searchParams} : SearchProps) => {
+const SearchPage = async ({ searchParams }: SearchProps) => {
+  // searchParams are already awaited by Next.js in Server Components
+  // Remove the `await searchParams` line
+  const categories = await db.category.findMany({
+    orderBy: {
+      name: "asc",
+    },
+  });
 
-    // Await searchParams here
-    const awaitedSearchParams = await searchParams;
+  const { userId } = await auth();
+  const jobs = await getJobs({ ...searchParams }); // Use searchParams directly
 
-    const categories = await db.category.findMany({
-        orderBy : {
-            name : "asc"
-        }
-    })
+  return (
+    <>
+      <div className="px-6 pt-6 block md:hidden max-lg:mb-0 ">
+        {/* SearchContainer likely uses useSearchParams, wrap it */}
+        <Suspense fallback={<div>Loading Search...</div>}>
+          <SearchContainer />
+        </Suspense>
+      </div>
 
-    const {userId} = await auth();
-    // Use the awaitedSearchParams
-    const jobs  = await getJobs({...awaitedSearchParams})
+      <div className="p-6">
+        {/* categories */}
+        <CategoriesList categories={categories} />
 
+        {/* applied filters likely uses useSearchParams, wrap it */}
+        <Suspense fallback={<div>Loading Filters...</div>}>
+          <AppliedFilters categories={categories} />
+        </Suspense>
 
-    return (
-        <>
-            <div className="px-6 pt-6 block md:hidden max-lg:mb-0 ">
-                <SearchContainer/>
-            </div>
-
-            <div className="p-6">
-                {/* categories */}
-                <CategoriesList categories={categories}/>
-
-                {/* applied filters */}
-                <AppliedFilters categories={categories}/>
-
-                {/* page content */}
-                <PageContent jobs={jobs} userId={userId}/>
-            </div>
-        </>
-    )
-}
+        {/* page content */}
+        <PageContent jobs={jobs} userId={userId} />
+      </div>
+    </>
+  );
+};
 
 export default SearchPage;
