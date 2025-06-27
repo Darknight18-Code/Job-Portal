@@ -4,55 +4,76 @@ import { NextResponse } from "next/server";
 
 export const PATCH = async (
     req : Request,
-    {params} : {params : {jobId : string}}
+    // TEMPORARY WORKAROUND: Cast the context argument to 'any'
+    context: any // This line is changed
 ) => {
     try {
-        
         const {userId} = await auth();
-        const {jobId} = params
+        // Access jobId from context.params
+        const {jobId} = context.params;
 
         if (!userId) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
         if (!jobId) {
-            return new NextResponse("Job ID is missing", { status: 404 });
+            return new NextResponse("Job ID is missing", { status: 400 }); // Changed from 404 to 400
         }
 
+        // Fetch the job to get its current savedUsers
         const job = await db.job.findUnique({
             where:{
                 id : jobId,
-                userId
+                // Removed userId from where clause here if any user can save/unsave
+                // It means a user can save/unsave any job, not just jobs they own
+            },
+            select: {
+                savedUsers: true, // Select the savedUsers array
             }
-        })
+        });
 
         if(!job){
             return new NextResponse("Job Not Found", {status:404});
         }
 
-        const userIndex = job.savedUsers.indexOf(userId)
-        let updatedJob
+        // Ensure savedUsers is an array
+        const currentSavedUsers = job.savedUsers || [];
+
+        const userIndex = currentSavedUsers.indexOf(userId);
+        let updatedJob;
+
         if(userIndex !== -1){
-             updatedJob = await db.job.update({
-            where:{
-                id : jobId,
-                userId
-            },
-            data: {
-                savedUsers : {
-                    set : job.savedUsers.filter((savedUserId) => savedUserId !== userId)
+            // User has saved this job, so unsave (remove userId)
+            updatedJob = await db.job.update({
+                where:{
+                    id : jobId,
+                    // removed userId from here as well for saving/unsaving by any user
+                },
+                data: {
+                    savedUsers : {
+                        set : currentSavedUsers.filter((savedUserId) => savedUserId !== userId)
+                    }
                 }
-            }
-
-        })
+            })
+        } else {
+            // User has NOT saved this job, so save (add userId)
+            updatedJob = await db.job.update({
+                where:{
+                    id : jobId,
+                    // removed userId from here as well for saving/unsaving by any user
+                },
+                data: {
+                    savedUsers : {
+                        push : userId
+                    }
+                }
+            })
         }
-
-        
 
         return NextResponse.json(updatedJob);
 
     } catch (error) {
-        console.log(`[JOB_PUBLISH_PATCH] : ${error}`);
+        console.error(`[JOB_SAVE_UNSAVE_PATCH] : ${error}`); // Changed log tag for clarity
         return new NextResponse("Internal Server Error", {status: 500});
     }
 }
