@@ -13,16 +13,19 @@ cloudinary.config({
 
 export const DELETE = async (
   req: Request,
-  { params }: { params: { jobId: string } }
+  // TEMPORARY WORKAROUND: Cast the context argument to 'any'
+  context: any // This line is changed
 ) => {
   try {
     const { userId } = await auth();
+    // Access params from context as before
+    const { jobId } = context.params;
     const { url } = await req.json();
 
     if (!userId || !url) return new NextResponse("Missing info", { status: 400 });
 
     const attachment = await db.attachment.findFirst({
-      where: { jobId: params.jobId, url },
+      where: { jobId: jobId, url }, // Use jobId from context
     });
 
     if (!attachment) return new NextResponse("Attachment not found", { status: 404 });
@@ -31,7 +34,7 @@ export const DELETE = async (
 
     if (publicId) {
       await cloudinary.uploader.destroy(publicId, {
-        resource_type: "image",
+        resource_type: "image", // Or "video", "raw" depending on what you're storing
       });
     }
 
@@ -45,4 +48,3 @@ export const DELETE = async (
     return new NextResponse("Internal error", { status: 500 });
   }
 };
-
