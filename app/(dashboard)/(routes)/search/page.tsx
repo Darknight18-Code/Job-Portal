@@ -5,20 +5,23 @@ import { auth } from "@clerk/nextjs/server";
 import CategoriesList from "./_components/categories-list";
 import PageContent from "./_components/page-content";
 import AppliedFilters from "./_components/applied-filters";
-import { Suspense } from "react"; // Import Suspense
+import { Suspense } from "react";
 
 interface SearchProps {
-  searchParams: {
+  searchParams: Promise<{
     title?: string;
     categoryId?: string;
     createdAtFilter?: string;
     shiftTiming?: string;
     workMode?: string;
     yearsOfExperience?: string;
-  };
+  }>;
 }
 
 const SearchPage = async ({ searchParams }: SearchProps) => {
+  // Await searchParams for Next.js 15
+  const awaitedSearchParams = await searchParams;
+  
   const categories = await db.category.findMany({
     orderBy: {
       name: "asc",
@@ -26,7 +29,7 @@ const SearchPage = async ({ searchParams }: SearchProps) => {
   });
 
   const { userId } = await auth();
-  const jobs = await getJobs({ ...searchParams });
+  const jobs = await getJobs({ ...awaitedSearchParams });
 
   return (
     <>
@@ -38,9 +41,7 @@ const SearchPage = async ({ searchParams }: SearchProps) => {
 
       <div className="p-6">
         {/* categories */}
-        <Suspense fallback={<div>Loading Categories...</div>}>
-          <CategoriesList categories={categories} />
-        </Suspense>
+        <CategoriesList categories={categories} />
 
         {/* applied filters */}
         <Suspense fallback={<div>Loading Filters...</div>}>
@@ -48,9 +49,7 @@ const SearchPage = async ({ searchParams }: SearchProps) => {
         </Suspense>
 
         {/* page content */}
-        <Suspense fallback={<div>Loading Job Listings...</div>}>
-          <PageContent jobs={jobs} userId={userId} />
-        </Suspense>
+        <PageContent jobs={jobs} userId={userId} />
       </div>
     </>
   );
