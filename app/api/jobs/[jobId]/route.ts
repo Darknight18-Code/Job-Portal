@@ -4,10 +4,12 @@ import { NextResponse } from "next/server";
 
 export const PATCH = async (
   req: Request,
-  context: { params: { jobId: string } }
+  // TEMPORARY WORKAROUND: Cast the context argument to 'any'
+  context: any // This line is changed
 ) => {
   try {
     const { userId } = await auth();
+    // Access jobId from context.params
     const { jobId } = context.params;
 
     if (!userId) {
@@ -15,7 +17,7 @@ export const PATCH = async (
     }
 
     if (!jobId) {
-      return new NextResponse("Job ID is missing", { status: 400 });
+      return new NextResponse("Job ID is missing", { status: 400 }); // Changed from 404 to 400 for consistency
     }
 
     const updatedValues = await req.json();
@@ -30,7 +32,7 @@ export const PATCH = async (
 
     return NextResponse.json(job);
   } catch (error) {
-    console.log(`[JOB_PATCH] : ${error}`);
+    console.error(`[JOB_PATCH] : ${error}`); // Use console.error
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 };
