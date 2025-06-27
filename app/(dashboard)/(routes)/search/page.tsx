@@ -8,7 +8,7 @@ import AppliedFilters from "./_components/applied-filters";
 import { Suspense } from "react"; // Import Suspense
 
 interface SearchProps {
-  searchParams: { // No need for Promise here, Next.js passes it directly
+  searchParams: {
     title?: string;
     categoryId?: string;
     createdAtFilter?: string;
@@ -19,8 +19,6 @@ interface SearchProps {
 }
 
 const SearchPage = async ({ searchParams }: SearchProps) => {
-  // searchParams are already awaited by Next.js in Server Components
-  // Remove the `await searchParams` line
   const categories = await db.category.findMany({
     orderBy: {
       name: "asc",
@@ -28,12 +26,11 @@ const SearchPage = async ({ searchParams }: SearchProps) => {
   });
 
   const { userId } = await auth();
-  const jobs = await getJobs({ ...searchParams }); // Use searchParams directly
+  const jobs = await getJobs({ ...searchParams });
 
   return (
     <>
       <div className="px-6 pt-6 block md:hidden max-lg:mb-0 ">
-        {/* SearchContainer likely uses useSearchParams, wrap it */}
         <Suspense fallback={<div>Loading Search...</div>}>
           <SearchContainer />
         </Suspense>
@@ -41,15 +38,19 @@ const SearchPage = async ({ searchParams }: SearchProps) => {
 
       <div className="p-6">
         {/* categories */}
-        <CategoriesList categories={categories} />
+        <Suspense fallback={<div>Loading Categories...</div>}>
+          <CategoriesList categories={categories} />
+        </Suspense>
 
-        {/* applied filters likely uses useSearchParams, wrap it */}
+        {/* applied filters */}
         <Suspense fallback={<div>Loading Filters...</div>}>
           <AppliedFilters categories={categories} />
         </Suspense>
 
         {/* page content */}
-        <PageContent jobs={jobs} userId={userId} />
+        <Suspense fallback={<div>Loading Job Listings...</div>}>
+          <PageContent jobs={jobs} userId={userId} />
+        </Suspense>
       </div>
     </>
   );
