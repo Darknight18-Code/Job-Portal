@@ -11,11 +11,13 @@ cloudinary.config({
 
 export const DELETE = async (
   req: Request,
-  { params }: { params: { userId: string } }
+  // TEMPORARY WORKAROUND: Cast the context argument to 'any'
+  context: any // This line is changed
 ) => {
   try {
     const { userId: clerkId } = await auth();
-    const { userId } = params;
+    // Access userId from context.params
+    const { userId } = context.params;
 
     if (!clerkId || clerkId !== userId) {
       return new NextResponse("Unauthorized", { status: 401 });
@@ -30,16 +32,18 @@ export const DELETE = async (
     const publicIdWithExtension = segments[segments.length - 1];
     const publicId = publicIdWithExtension.split(".")[0];
 
-    console.log("Deleting from Cloudinary:", publicId);
+    console.log("Attempting to delete from Cloudinary:", publicId);
 
-    // Optional: delete with resource_type auto
+    // Optional: delete with resource_type auto. Use 'raw' if it's a general file upload for resumes.
+    // Assuming resumes are generally PDF or similar documents, 'raw' is often more appropriate
+    // than 'image' for Cloudinary deletion unless you're explicitly converting them to images.
     await cloudinary.uploader.destroy(publicId, {
-      resource_type: "image",
+      resource_type: "raw", // Changed to 'raw' - adjust if your resumes are always images
     });
 
     const result = await db.resumes.deleteMany({
       where: {
-        userProfileId: userId,
+        userProfileId: userId, // This refers to the Prisma model's relationship field
         url,
       },
     });
@@ -48,7 +52,7 @@ export const DELETE = async (
 
     return new NextResponse("Resume deleted", { status: 200 });
   } catch (error) {
-    console.error("[RESUMES_DELETE]", error);
+    console.error("[RESUMES_DELETE]", error); // Use console.error for errors
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 };
