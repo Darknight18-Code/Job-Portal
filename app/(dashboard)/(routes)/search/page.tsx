@@ -1,3 +1,7 @@
+export const dynamic = "force-dynamic";
+
+
+
 import { getJobs } from "@/actions/get-jobs";
 import SearchContainer from "@/components/ui/search-container";
 import { db } from "@/lib/db";
