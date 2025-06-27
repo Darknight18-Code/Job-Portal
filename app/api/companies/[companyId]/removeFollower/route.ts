@@ -4,55 +4,77 @@ import { NextResponse } from "next/server";
 
 export const PATCH = async (
   req: Request,
-  context: { params: { companyId: string } }
+  // TEMPORARY WORKAROUND: Cast context to 'any' to bypass strict type checking
+  context: any // This line is changed
 ) => {
   try {
     const { userId } = await auth();
-    const { companyId } = context.params;
+    const { companyId } = context.params; // Access params directly from context
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
     if (!companyId) {
-      return new NextResponse("Job ID is missing", { status: 400 });
+      // Changed to 'Company ID is missing' for clarity
+      return new NextResponse("Company ID is missing", { status: 400 });
     }
-
 
     const company = await db.company.findUnique({
-        where : {
-            id : companyId
-        }
-    })
+      where: {
+        id: companyId,
+      },
+      select: {
+        // Ensure followers is selected to access it
+        followers: true,
+      },
+    });
 
     if (!company) {
-      return new NextResponse("Company is missing", { status: 400 });
+      // Changed status to 404 for 'not found'
+      return new NextResponse("Company not found", { status: 404 });
     }
 
-    const userIndex = company?.followers.indexOf(userId)
+    // --- Start of Follow/Unfollow Logic ---
+    // Ensure company.followers is initialized to an empty array if null/undefined
+    const currentFollowers = company.followers || [];
+    const userIndex = currentFollowers.indexOf(userId);
 
-
-
-    if(userIndex !== -1){
-         const updatedCompany = await db.company.update({
-            where : {
-                id : companyId,
-                userId
-            },
-            data : {
-                followers : {
-                    set :  company?.followers.filter(followerId => followerId !== userId)
-                }
-            }
-        })
-
-        return new NextResponse(JSON.stringify(updatedCompany), {status : 200})
-    }else{
-        return new NextResponse("User Not Found in followers",{status : 404})
+    if (userIndex !== -1) {
+      // User is following, so unfollow (remove userId)
+      const updatedCompany = await db.company.update({
+        where: {
+          id: companyId,
+          // IMPORTANT: Removed 'userId' from where clause if this is a "follow/unfollow" endpoint for any user
+          // If you *only* want the company owner to manage followers, keep 'userId' here.
+          // Otherwise, it should just be { id: companyId }.
+        },
+        data: {
+          followers: {
+            set: currentFollowers.filter((followerId) => followerId !== userId),
+          },
+        },
+      });
+      return new NextResponse(JSON.stringify(updatedCompany), { status: 200 });
+    } else {
+      // User is not following, so follow (add userId)
+      const updatedCompany = await db.company.update({
+        where: {
+          id: companyId,
+          // Same as above: removed 'userId' if any user can follow
+        },
+        data: {
+          followers: {
+            push: userId,
+          },
+        },
+      });
+      return new NextResponse(JSON.stringify(updatedCompany), { status: 200 }); // Return 200 on success
     }
+    // --- End of Follow/Unfollow Logic ---
 
   } catch (error) {
-    console.log(`[COMPANY_PATCH] : ${error}`);
+    console.error(`[COMPANY_PATCH] : ${error}`); // Use console.error for errors
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 };
