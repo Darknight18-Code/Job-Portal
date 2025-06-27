@@ -1,4 +1,4 @@
-"use client"
+"use client" // <--- ADD THIS LINE
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -27,16 +27,16 @@ const CategoryListItem = ({label, value} : CategoryListItemProps) => {
                 title: currentTitle,
                 categoryId : isSelected ? null : value,
             },
-            
+
         },{skipNull : true , skipEmptyString : true});
         router.push(url);
     }
 
-  return (
-    <Button type="button" onClick={onClick} variant={"outline"} className={cn("whitespace-nowrap text-sm tracking-wider text-muted-foreground border px-2 py-[2px] rounded-md hover:bg-purple-700 hover:text-white transition cursor-pointer hover:shadow-md", isSelected && "bg-purple-700 text-white shadow-md")}>
-        {label}
-    </Button>
-  )
+    return (
+        <Button type="button" onClick={onClick} variant={"outline"} className={cn("whitespace-nowrap text-sm tracking-wider text-muted-foreground border px-2 py-[2px] rounded-md hover:bg-purple-700 hover:text-white transition cursor-pointer hover:shadow-md", isSelected && "bg-purple-700 text-white shadow-md")}>
+            {label}
+        </Button>
+    )
 }
 
 export default CategoryListItem
