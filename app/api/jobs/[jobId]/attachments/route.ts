@@ -4,11 +4,13 @@ import { NextResponse } from "next/server";
 
 export const PATCH = async (
   req: Request,
-  { params }: { params: { jobId: string } }
+  // TEMPORARY WORKAROUND: Cast the context argument to 'any'
+  context: any // This line is changed
 ) => {
   try {
     const { userId } = await auth();
-    const { jobId } = params;
+    // Access jobId from context.params
+    const { jobId } = context.params;
     const { attachments } = await req.json();
 
     if (!userId) return new NextResponse("Unauthorized", { status: 401 });
@@ -18,6 +20,9 @@ export const PATCH = async (
     }
 
     // Optional: delete existing attachments (if needed)
+    // Note: If you're PATCHing to *add* attachments, deleting all existing ones might not be desired.
+    // Consider if you want to only add, or replace, or specific update.
+    // For replacing:
     await db.attachment.deleteMany({ where: { jobId } });
 
     // Insert new attachments
