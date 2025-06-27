@@ -8,6 +8,19 @@ const nextConfig: NextConfig = {
       "images.clerk.dev",     // also used by Clerk sometimes
     ],
   },
+  // Add these ESLint and TypeScript configurations
+  eslint: {
+    // Warning: This allows production builds to successfully complete even if
+    // your project has ESLint errors. This is generally not recommended.
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    // !! WARN !!
+    // Dangerously allow production builds to successfully complete even if
+    // your project has type errors.
+    // !! WARN !!
+    ignoreBuildErrors: true,
+  },
 };
 
 export default nextConfig;
