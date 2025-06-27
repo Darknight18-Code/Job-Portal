@@ -11,11 +11,13 @@ cloudinary.config({
 
 export const DELETE = async (
   req: Request,
-  { params }: { params: { jobId: string } }
+  // TEMPORARY WORKAROUND: Cast the context argument to 'any'
+  context: any // This line is changed
 ) => {
   try {
     const { userId } = await auth();
-    const { jobId } = params;
+    // Access jobId from context.params
+    const { jobId } = context.params;
 
     if (!userId) return new NextResponse("Unauthorized", { status: 401 });
     if (!jobId) return new NextResponse("Job ID is required", { status: 400 });
@@ -27,6 +29,11 @@ export const DELETE = async (
     });
 
     if (!job) return new NextResponse("Job not found", { status: 404 });
+
+    // Ensure the user owns this job before allowing deletion
+    if (job.userId !== userId) {
+      return new NextResponse("Unauthorized", { status: 403 });
+    }
 
     // 2. Delete cover image from Cloudinary if present
     if (job.imageUrl) {
@@ -43,7 +50,7 @@ export const DELETE = async (
         const publicId = filenameWithExt?.split(".")[0];
         if (publicId) {
           try {
-            await cloudinary.uploader.destroy(publicId, { resource_type: "raw" });
+            await cloudinary.uploader.destroy(publicId, { resource_type: "raw" }); // Assuming attachments are 'raw' files
           } catch (err) {
             console.warn("Failed to delete attachment from Cloudinary:", err);
           }
